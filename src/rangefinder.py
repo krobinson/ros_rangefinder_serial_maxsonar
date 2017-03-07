@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+import roslib
+#; roslib.load_manifest('numpy_tutorials') #not sure why I need this
+import rospy
+from std_msgs.msg import String
+import serial
+
+ser = serial.Serial('/dev/ttyUSB0', 57600)
+
+def talker():
+    while not rospy.is_shutdown():
+        buffer = ""
+        stillReading = True
+        while stillReading:
+            one_byte = ser.read(1)
+            if one_byte == 'R':
+                buffer += one_byte
+                four_bytes = ser.read(4)
+                buffer += four_bytes
+                stillReading = False
+        data = buffer
+        rospy.loginfo(data)
+        pub.publish(String(data))
+        rospy.sleep(1.0)
+    pass
+
+if __name__ == '__main__':
+    try:
+        pub = rospy.Publisher('rangefinder', String, queue_size=10)
+        rospy.init_node('rangefinder_pub')
+        rate = rospy.Rate(10)
+        talker()
+    except rospy.ROSInterruptException:
+        pass            
